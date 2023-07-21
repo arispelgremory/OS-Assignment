@@ -38,18 +38,20 @@ searchPatron() {
     centerAlign "____________________"
     echo
 
-    # read data from patron.txt
+    # Read data from patron.txt
     read -p "Enter Patron ID to search: " patronID 
     echo
 
     readarray -t patronList < patron.txt
     IFS=$'\n'
 
+    # Set loop number
     counter=0
     for getPatronList in ${patronList[@]}; do
         ((counter++))
     done
 
+    # Search PatronID
     for (( i=0; i<$counter; i++ )); do
         IFS=$'\n'
         for perItem in ${patronList[arrayCounter]}; do              
@@ -67,7 +69,7 @@ searchPatron() {
         done
     done  
 
-    # display Patron details according patronID
+    # Display Patron details according patronID
     for i in {1..100}
     do
         printf "_"
