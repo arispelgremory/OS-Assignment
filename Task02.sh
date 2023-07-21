@@ -20,11 +20,9 @@ registerCondition() {
         "y"|"Y")
             echo
             registerPatron
-            break
             ;;
         "q"|"Q")
             echo "Main Menu"
-            break
             ;;
         *)
             echo "Please provide a valid choice" 
