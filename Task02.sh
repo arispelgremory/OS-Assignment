@@ -12,10 +12,31 @@ centerAlign() {
     printf "%${spaces_before}s%s%${spaces_after}s\n" "" "$text" ""
 }
 
+# Validation for register condition
+registerCondition() {
+    read newRegistration 
+
+    case $newRegistration in
+        "y"|"Y")
+            echo
+            registerPatron
+            break
+            ;;
+        "q"|"Q")
+            echo "Main Menu"
+            break
+            ;;
+        *)
+            echo "Please provide a valid choice" 
+            registerCondition
+            ;;
+    esac
+}
+
 # Register Patron
 registerPatron() {
     # patronList = patron.txt
-
+    echo
     echo "Patron Registration"
     echo "==================="
 
@@ -23,14 +44,16 @@ registerPatron() {
     read -p "Patron Full Name (As per NRIC): " patronName
     read -p "Contact Number: " contactNumber
     read -p "Email Address (As per TAR UMT format): " email
-    echo -e "$patronID:$patronName:$contactNumber:$email" >> ".\patron.txt\n"
+    echo -e "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
+    echo
 
-    echo read -p "Register Another Patron? (y)es or (q)uit: " newRegistration 
-    
-
+    echo -e "Register Another Patron? (y)es or (q)uit: \n" 
     echo "Press (q) to return to University Venue Management Menu." 
-    read mainMenu
+    
+    registerCondition
 }
+
+registerPatron
 
 # Search Patron
 searchPatron() {
@@ -85,7 +108,7 @@ searchPatron() {
     # read "Press (q) to return to University Venue Management Menu."
 }
 
-searchPatron
+# searchPatron
 
 readTextfile() {
     patronID=230812
