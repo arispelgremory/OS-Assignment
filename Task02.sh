@@ -39,9 +39,45 @@ registerPatron() {
     echo "==================="
 
     read -p "Patron ID (As per TAR UMT format): " patronID
+    # Regular Expression check to check student / Staff ID valid or not
+    while true
+    do
+        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[$patronID =~ ^[0-9]{4}$]]; then
+            break
+        else
+            echo "Please provide a valid Patron ID (As per TAR UMT format): "
+            read -p "Patron ID (As per TAR UMT format): " patronID
+        fi
+    done
+
     read -p "Patron Full Name (As per NRIC): " patronName
+    # Name doesn't require regular expression
+
     read -p "Contact Number: " contactNumber
+    # Malaysian style phone number 010-0000000 or 010-00000000
+    while true
+    do
+        if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
+            break
+        else
+            echo "Please provide a valid Contact Number: "
+            read -p "Contact Number: " contactNumber
+        fi
+    done
+
     read -p "Email Address (As per TAR UMT format): " email
+    # TAR UMT's style of email address, either xxxxxx-xx00@student.tarc.edu.my or xxx@tarc.edu.my
+    while true
+    do
+        if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]@tarc\.edu\.my$ ]]; then
+            break
+        else
+            echo "Please provide a valid Email Address (As per TAR UMT format): "
+            read -p "Email Address (As per TAR UMT format): " email
+        fi
+    done
+
+
     echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
     echo
 
@@ -61,7 +97,15 @@ searchPatron() {
 
     # Read data from patron.txt
     read -p "Enter Patron ID to search: " patronID 
-    echo
+    while true
+    do
+        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
+            break
+        else
+            echo "Please provide a valid Patron ID (As per TAR UMT format): "
+            read -p "Patron ID (As per TAR UMT format): " patronID
+        fi
+    done
 
     readarray -t patronList < patron.txt
     IFS=$'\n'
