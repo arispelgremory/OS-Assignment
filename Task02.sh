@@ -42,7 +42,7 @@ registerPatron() {
     read -p "Patron Full Name (As per NRIC): " patronName
     read -p "Contact Number: " contactNumber
     read -p "Email Address (As per TAR UMT format): " email
-    echo -e "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
+    echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
     echo
 
     echo -e "Register Another Patron? (y)es or (q)uit: \n" 
@@ -51,7 +51,7 @@ registerPatron() {
     registerCondition
 }
 
-registerPatron
+# registerPatron
 
 # Search Patron
 searchPatron() {
@@ -75,10 +75,9 @@ searchPatron() {
     # Search PatronID
     for (( i=0; i<$counter; i++ )); do
         IFS=$'\n'
-        for perItem in ${patronList[arrayCounter]}; do              
+        for perItem in ${patronList[arrayCounter]}; do        
             IFS=$':'
             read -ra patronDetailsArray <<< $perItem
-            
             if [ ${patronDetailsArray[0]} != $patronID ]; then  
                 (( arrayCounter++ ))
             else
@@ -97,6 +96,8 @@ searchPatron() {
     done
     echo
 
+    echo ${patronDetailsArray[@]}
+
     echo "Full Name:" ${patronDetailsArray[1]}
     echo "Contact Number:" ${patronDetailsArray[2]}
     echo -e "Email Address (As per TAR UMT format):" ${patronDetailsArray[3]} "\n"
@@ -106,7 +107,7 @@ searchPatron() {
     # read "Press (q) to return to University Venue Management Menu."
 }
 
-# searchPatron
+searchPatron
 
 readTextfile() {
     patronID=230812
