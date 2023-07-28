@@ -54,7 +54,16 @@ registerPatron() {
     done
 
     read -p "Patron Full Name (As per NRIC): " patronName
-    # Name doesn't require regular expression
+    # Name just accpets character inputs
+    while true
+    do
+        if [[ $patronName =~ ^[a-zA-Z]+$ ]]; then
+            break
+        else
+            echo "Please provide a valid Patron Full Name (As per NRIC): "
+            read -p "Patron Full Name (As per NRIC): " patronName
+        fi
+    done
 
     read -p "Contact Number: " contactNumber
     # Malaysian style phone number 010-0000000 or 010-00000000
