@@ -1,20 +1,67 @@
 #!/bin/bash
 
 # Validation for venue condition
-venueCondition() {
-    read newRegistration 
+bookingVenueCondition() {
+    read -p "Press (s) to save and generate the venue booking details or Press (c) to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
 
-    case $newRegistration in
-        "y"|"Y")
-            echo
-            registerPatron
+    case $newBooking in
+        "s"|"S")
+            echo "Venue Book Successfully!"
+            echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
             ;;
-        "q"|"Q")
-            echo "Main Menu"
+        "c"|"C")
+            echo "Venue Booking Cencelled."
+            echo "Returning to Main Menu."
             ;;
         *)
-            echo "Please provide a valid choice" 
-            registerCondition
+            echo "Please provide a valid choice!" 
+            bookingVenueCondition
+            ;;
+    esac
+}
+
+# Booking Venue
+bookingVenue() {
+    echo "Booking Venue"
+    echo "================"
+
+    read -p "Please enter the Room Number: " roomNumber
+    echo 
+
+    echo "Room Type:" $labType
+    echo "Capacity:" $capacity
+    echo "Remarks:" $remarks
+    echo "Status:" $status
+    echo
+
+    echo "Notes: The booking hours shall be from 8am to 8pm only. The booking duration shall be at least 30 minuts per booking."
+
+    echo "Please enter the following details:"
+    echo
+
+    read -p "Booking Date (mm/dd/yy): " bookingDate
+    read -p "Time From (hh:mm): " timeDurationFrom
+    read -p "Time to (hh:mm): " timeDurationTo
+    read -p "Reasons for Booking: " reasons
+
+    bookingVenueCondition
+    # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+}
+
+# Validation for patron details condition
+patronDetailsCondition() {
+    read -p "Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu:" proceedBooking 
+
+    case $proceedBooking in
+        "n"|"n")
+            bookingVenue
+            ;;
+        "q"|"Q")
+            echo "Main Menu."
+            ;;
+        *)
+            echo "Please provide a valid choice!" 
+            patronDetailsCondition
             ;;
     esac
 }
@@ -44,34 +91,4 @@ patronDetailsValidation() {
     echo
     echo "Patron Name:" ${patronDetailsArray[1]}
     echo
-    read -p "Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu:" 
-
-    # venueCondition
-}
-
-bookingVenue() {
-    echo "Booking Venue"
-    echo "================"
-
-    read -p "Please enter the Room Number: " roomNumber
-    echo 
-
-    echo "Room Type:" $labType
-    echo "Capacity:" $capacity
-    echo "Remarks:" $remarks
-    echo "Status:" $status
-    echo
-
-    echo "Notes: The booking hours shall be from 8am to 8pm only. The booking duration shall be at least 30 minuts per booking."
-
-    echo "Please enter the following details:"
-    echo
-
-    read -p "Booking Date (mm/dd/yy): " bookingDate
-    read -p "Time From (hh:mm): " timeDurationFrom
-    read -p "Time to (hh:mm): " timeDurationTo
-    read -p "Reasons for Booking: " reasons
-
-    echo "Press (s) to save and generate the venue booking details or Press (c) to cancel the Venue Booking and return to University Venue Management Menu:"
-    echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
 }
