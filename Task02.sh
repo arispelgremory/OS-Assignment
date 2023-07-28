@@ -46,7 +46,7 @@ registerPatron() {
     echo
 
     echo -e "Register Another Patron? (y)es or (q)uit: \n" 
-    echo "Press (q) to return to University Venue Management Menu." 
+    echo "Press (q) to return to ${bold}University Venue Management Menu." 
     
     registerCondition
 }
