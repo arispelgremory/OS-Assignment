@@ -57,7 +57,7 @@ patronDetailsCondition() {
             bookingVenue
             ;;
         "q"|"Q")
-            echo "Main Menu."
+            echo "Returning to Main Menu."
             ;;
         *)
             echo "Please provide a valid choice!" 
@@ -71,13 +71,24 @@ patronDetailsValidation() {
     echo "Patron Details Validation"
     echo "==========================="
 
+    # Read data from patron.txt
     read -p "Please enter Patron's ID Number: " patronID
+    while true
+    do
+        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
+            break
+        else
+            echo "Please provide a valid Patron ID (As per TAR UMT format): "
+            read -p "Patron ID (As per TAR UMT format): " patronID
+        fi
+    done
 
     if [ ! -f patron.txt ]; then
         echo "Error: patron.txt file does not exist in the current directory."
         return
     fi
 
+    # Search with PatronID
     patronDetails=$(grep "^$patronID:" patron.txt)
 
     if [ -z "$patronDetails" ]; then

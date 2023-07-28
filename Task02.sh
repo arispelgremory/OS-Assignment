@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Center Algin Text
 centerAlign() {
     local text="$1"
@@ -14,18 +16,19 @@ centerAlign() {
 
 # Validation for register condition
 registerCondition() {
-    read newRegistration 
+    echo -e "Register Another Patron? (y)es or (q)uit: \n" 
+    read -p "Press (q) to return to ${bold}University Venue Management Menu. " newRegistration
 
     case $newRegistration in
         "y"|"Y")
-            echo
+            echo "Patron registered successfully!"
             registerPatron
             ;;
         "q"|"Q")
             echo "Main Menu"
             ;;
         *)
-            echo "Please provide a valid choice" 
+            echo "Please provide a valid choice!" 
             registerCondition
             ;;
     esac
@@ -36,7 +39,7 @@ registerPatron() {
     # patronList = patron.txt
     echo
     echo "Patron Registration"
-    echo "==================="
+    echo "====================="
 
     read -p "Patron ID (As per TAR UMT format): " patronID
     # Regular Expression check to check student / Staff ID valid or not
@@ -80,14 +83,28 @@ registerPatron() {
 
     echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
     echo
-
-    echo -e "Register Another Patron? (y)es or (q)uit: \n" 
-    echo "Press (q) to return to ${bold}University Venue Management Menu." 
     
     registerCondition
 }
 
-# registerPatron
+# Validation for search condition
+searchCondition() {
+    echo "Search Another Person? (y)es or (q)uit :"
+    read "Press (q) to return to University Venue Management Menu. " searchAnother
+
+    case $searchAnother in
+        "y"|"Y")
+            searchPatron
+            ;;
+        "q"|"Q")
+            echo "Returning to Main Menu."
+            ;;
+        *)
+            echo "Please provide a valid choice!" 
+            searchCondition
+            ;;
+    esac
+}
 
 # Search Patron
 searchPatron() {
@@ -106,32 +123,48 @@ searchPatron() {
             read -p "Patron ID (As per TAR UMT format): " patronID
         fi
     done
+    
+    if [ ! -f patron.txt ]; then
+        echo "Error: patron.txt file does not exist in the current directory."
+        return
+    fi
 
-    readarray -t patronList < patron.txt
-    IFS=$'\n'
+    # Search with PatronID
+    patronDetails=$(grep "^$patronID:" patron.txt)
 
-    # Set loop number
-    counter=0
-    for getPatronList in ${patronList[@]}; do
-        ((counter++))
-    done
+    if [ -z "$patronDetails" ]; then
+        echo "Error: No patron found with ID $patronID."
+        return
+    fi
 
-    # Search PatronID
-    for (( i=0; i<$counter; i++ )); do
-        IFS=$'\n'
-        for perItem in ${patronList[arrayCounter]}; do        
-            IFS=$':'
-            read -ra patronDetailsArray <<< $perItem
-            if [ ${patronDetailsArray[0]} != $patronID ]; then  
-                (( arrayCounter++ ))
-            else
-                arrayCounter=$arrayCounter
-                (( i=3 ))
-                # echo "Patron Details:" ${patronDetailsArray[@]}
-                break
-            fi
-        done
-    done  
+    IFS=":"
+    read -ra patronDetailsArray <<< "$patronDetails"
+
+    # readarray -t patronList < patron.txt
+    # IFS=$'\n'
+
+    # # Set loop number
+    # counter=0
+    # for getPatronList in ${patronList[@]}; do
+    #     ((counter++))
+    # done
+
+    # # Search PatronID
+    # for (( i=0; i<$counter; i++ )); do
+    #     IFS=$'\n'
+    #     for perItem in ${patronList[arrayCounter]}; do        
+    #         IFS=$':'
+    #         read -ra patronDetailsArray <<< $perItem
+    #         if [ ${patronDetailsArray[0]} != $patronID ]; then  
+    #             (( arrayCounter++ ))
+    #         else
+    #             arrayCounter=$arrayCounter
+    #             (( i=3 ))
+    #             # echo "Patron Details:" ${patronDetailsArray[@]}
+    #             break
+    #         fi
+    #     done
+    # done  
 
     # Display Patron details according patronID
     for i in {1..100}
@@ -139,48 +172,10 @@ searchPatron() {
         printf "_"
     done
     echo
-
-    echo ${patronDetailsArray[@]}
-
     echo "Full Name:" ${patronDetailsArray[1]}
     echo "Contact Number:" ${patronDetailsArray[2]}
     echo -e "Email Address (As per TAR UMT format):" ${patronDetailsArray[3]} "\n"
+    echo 
 
-    # read "Search Another Person? (y)es or (q)uit :"
-
-    # read "Press (q) to return to University Venue Management Menu."
+    searchCondition
 }
-
-searchPatron
-
-readTextfile() {
-    patronID=230812
-    # echo read -p "Enter Patron ID to search: " patronID
-
-    readarray -t patronList < patron.txt
-    IFS=$'\n'
-
-    counter=0
-    for getPatronList in ${patronList[@]}; do
-        ((counter++))
-    done
-
-    for (( i=0; i<$counter; i++ )); do
-        IFS=$'\n'
-
-        for perItem in ${patronList[arrayCounter]}; do              
-            IFS=$':'
-            read -ra patronDetailsArray <<< $perItem
-
-            if [ ${patronDetailsArray[0]} != $patronID ]; then  
-                (( arrayCounter++ ))
-            else
-                arrayCounter=$arrayCounter
-                (( i=3 ))
-                echo "Patron Details:" ${patronDetailsArray[@]}
-                break
-            fi
-        done
-    done  
-}
-# textFile
