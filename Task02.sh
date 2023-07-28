@@ -78,7 +78,7 @@ searchPatron() {
         for perItem in ${patronList[arrayCounter]}; do              
             IFS=$':'
             read -ra patronDetailsArray <<< $perItem
-
+            
             if [ ${patronDetailsArray[0]} != $patronID ]; then  
                 (( arrayCounter++ ))
             else

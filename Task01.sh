@@ -1,3 +1,4 @@
+#!/bin/bash
 # echo "What is your name?" // print
 # read PERSON // read
 
