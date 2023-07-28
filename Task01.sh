@@ -1,41 +1,37 @@
 #!/bin/bash
-# echo "What is your name?" // print
-# read PERSON // read
-
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-
-echo "${bold}University Venue Management Menu${normal}\n" 
-echo "A – Register New Patron\nB – Search Patron Details\nC – Add New Venue\nD – List Venue\nE – Book Venue"
-echo "\nQ – Exit from Program"
-
-echo "\nPlease select a choice: "
+echo -e "${bold}University Venue Management Menu${normal}\n"
+echo -e "A – Register New Patron\nB – Search Patron Details\nC – Add New Venue\nD – List Venue\nE – Book Venue"
+echo -e "\nQ – Exit from Program\n"
+echo -e "Please select a choice: "
 read choice
 
-echo You have selected ${choice}
+choice=$(echo -e $choice | tr '[a-z]' '[A-Z]')
+echo -e "You have selected ${choice}\n"
 
-
-case $choice | tr '[a-z]' '[A-Z]' in 
-    "A")
-        echo "Register New Patron"
+case $choice in
+    "A" | "a")
+        echo -e "Register New Patron\n"
+        bash Task02.sh;
         ;;
-    "B")
-        echo "Search Patron Details"
+    "B" | "b")
+        echo -e "Search Patron Details\n"
         ;;
-    "C")
-        echo "Add New Venue"
+    "C" | "c")
+        echo -e "Add New Venue\n"
         ;;
-    "D")
-        echo "List Venue"
+    "D" | "d")
+        echo -e "List Venue\n"
         ;;
-    "E")
-        echo "Book Venue"
+    "E" | "e")
+        echo -e "Book Venue\n"
         ;;
-    "Q")
-        echo "Exit from Program"
+    "Q" | "q")
+        echo -e "Exit from Program\n"
         ;;
     *)
-        echo "Invalid Choice"
+        echo -e "Invalid Choice\n"
         ;;
 esac
