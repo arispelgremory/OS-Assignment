@@ -36,7 +36,7 @@ AddVenue() {
    
     while true; do
       read -p "${normal}Block Name:" blockName
-      if [[ ! $blockName =~ ^[a-zA-Z].{1,3}$ ]]; then
+      if [[ ! $blockName =~ ^[a-zA-Z]{1,3}$ ]]; then
         echo "Invalid Input, please try again"
       else
         break;
@@ -45,7 +45,7 @@ AddVenue() {
 
     while true; do
       read -p "${normal}Room Number:" roomNumber
-      if [[ ! $roomNumber =~ ^[a-zA-Z].{1,2}+[0-9]{3}$ ]]; then
+      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,2}+[0-9]{3}$ ]]; then
         echo "Invalid Input, please try again"
       else
         break;
