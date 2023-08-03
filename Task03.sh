@@ -45,7 +45,7 @@ AddVenue() {
 
     while true; do
       read -p "${normal}Room Number:" roomNumber
-      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,2}+[0-9]{3}$ ]]; then
+      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,1}([a-zA-Z]{0,1}[0-9]{3}|[0-9]{3}[a-zA-Z]{0,1})$ ]]; then
         echo "Invalid Input, please try again"
       else
         break;
