@@ -43,7 +43,7 @@ registerPatron() {
 
     read -p "Patron ID (As per TAR UMT format): " patronID
     # Regular Expression check to check student / Staff ID valid or not
-    while true
+    while true; do
     do
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[$patronID =~ ^[0-9]{4}$]]; then
             break
@@ -55,7 +55,7 @@ registerPatron() {
 
     read -p "Patron Full Name (As per NRIC): " patronName
     # Name just accpets character inputs
-    while true
+    while true; do
     do
         if [[ $patronName =~ ^[a-zA-Z]+$ ]]; then
             break
@@ -67,7 +67,7 @@ registerPatron() {
 
     read -p "Contact Number: " contactNumber
     # Malaysian style phone number 010-0000000 or 010-00000000
-    while true
+    while true; do
     do
         if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
             break
@@ -79,7 +79,7 @@ registerPatron() {
 
     read -p "Email Address (As per TAR UMT format): " email
     # TAR UMT's style of email address, either xxxxxx-xx00@student.tarc.edu.my or xxx@tarc.edu.my
-    while true
+    while true; do
     do
         if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]@tarc\.edu\.my$ ]]; then
             break
@@ -123,7 +123,7 @@ searchPatron() {
 
     # Read data from patron.txt
     read -p "Enter Patron ID to search: " patronID 
-    while true
+    while true; do
     do
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
             break

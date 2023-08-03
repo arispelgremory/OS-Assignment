@@ -33,19 +33,57 @@ print_centered() {
 # Add Venue Funciton
 AddVenue() {
     print_centered "Add New Venue"
+   
+    while true; do
+      read -p "${normal}Block Name:" blockName
+      if [[ ! $blockName =~ ^[a-zA-Z].{1,3}$ ]]; then
+        echo "Invalid Input, please try again"
+      else
+        break;
+      fi
+    done
 
-    read -p "Block Name:" blockName
-    
-    read -p "Room Number:" roomNumber 
-    read -p "Room Type:" roomType
-    read -p "Capacity:" capacity
-    read -p "Status (by default):" status
-    status="Available"
+    while true; do
+      read -p "${normal}Room Number:" roomNumber
+      if [[ ! $roomNumber =~ ^[a-zA-Z].{1,2}+[0-9]{3}$ ]]; then
+        echo "Invalid Input, please try again"
+      else
+        break;
+      fi
+      
+    done
+
+    while true; do
+      read -p "Capacity:" capacity
+      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,2}[0-9]{3}$ ]]; then
+        echo "Invalid Input, please try again"
+      else
+        break;
+      fi
+    done
+
+    read -p "Remarks:" remarks
+    # Allow empty
+
+    read -p "Status (by default): Available"
+    status="Available" # Default is Available
     echo -e "\n"
+
+    # Specify the file to read
+    file="venue.txt"
+
+    # Check if the file doesn't exists
+    if [[ ! -f $file ]]; then
+      echo "$file not found."
+      echo "Creating $file."
+      echo BlockName:RoomNumber:RoomType:Capacity:Remarks >> $file
+    fi
+
+    # Append data into venue.txt
+    echo "$blockName:$roomNumber:$roomType:$capacity:$remarks" >> $file
     
 
     is_valid=0
-
     while [ $is_valid -eq 0 ]; do
         read -p "Add Another Venue? (y)es or (q)uit: " action  # Read new input
 
