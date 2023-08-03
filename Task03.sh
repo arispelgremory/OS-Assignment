@@ -50,7 +50,15 @@ AddVenue() {
       else
         break;
       fi
-      
+    done
+
+    while true; do
+      read -p "${normal}Room Type:" roomType
+      if [[ ! $roomType == "Lecture Hall" || $roomType == "Tutorial Room" || $roomType == "Lab" ]]; then
+        echo "Invalid Input, only accepts input such as:Lecture Hall, Tutorial Room and Lab."
+      else
+        break;
+      fi
     done
 
     while true; do
