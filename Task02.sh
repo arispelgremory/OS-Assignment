@@ -1,19 +1,5 @@
 #!/bin/bash
 
-# Center Algin Text
-centerAlign() {
-    local text="$1"
-    local terminal_width=$(tput cols)
-    local text_width=${#text}
-
-    # Calculate the number of spaces to add before and after the text
-    local spaces_before=$(( (terminal_width - text_width) / 2 ))
-    local spaces_after=$(( terminal_width - text_width - spaces_before ))
-
-    # Print the centered text with spaces
-    printf "%${spaces_before}s%s%${spaces_after}s\n" "" "$text" ""
-}
-
 # Validation for register condition
 registerCondition() {
     echo -e "Register Another Patron? (y)es or (q)uit: \n" 
@@ -43,51 +29,47 @@ registerPatron() {
 
     read -p "Patron ID (As per TAR UMT format): " patronID
     # Regular Expression check to check student / Staff ID valid or not
-    while true; do
-    do
-        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[$patronID =~ ^[0-9]{4}$]]; then
-            break
-        else
-            echo "Please provide a valid Patron ID (As per TAR UMT format): "
-            read -p "Patron ID (As per TAR UMT format): " patronID
-        fi
-    done
+    # while true; do
+    #     if [[ $patronID =~ ^[0-9]{6}$ ]] || [[$patronID =~ ^[0-9]{4}$]]; then
+    #         break
+    #     else
+    #         echo "Please provide a valid Patron ID (As per TAR UMT format): "
+    #         read -p "Patron ID (As per TAR UMT format): " patronID
+    #     fi
+    # done
 
     read -p "Patron Full Name (As per NRIC): " patronName
     # Name just accpets character inputs
-    while true; do
-    do
-        if [[ $patronName =~ ^[a-zA-Z]+$ ]]; then
-            break
-        else
-            echo "Please provide a valid Patron Full Name (As per NRIC): "
-            read -p "Patron Full Name (As per NRIC): " patronName
-        fi
-    done
+    # while true; do
+    #     if [[ $patronName =~ ^[a-zA-Z]+$ ]]; then
+    #         break
+    #     else
+    #         echo "Please provide a valid Patron Full Name (As per NRIC): "
+    #         read -p "Patron Full Name (As per NRIC): " patronName
+    #     fi
+    # done
 
     read -p "Contact Number: " contactNumber
     # Malaysian style phone number 010-0000000 or 010-00000000
-    while true; do
-    do
-        if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
-            break
-        else
-            echo "Please provide a valid Contact Number: "
-            read -p "Contact Number: " contactNumber
-        fi
-    done
+    # while true; do
+    #     if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
+    #         break
+    #     else
+    #         echo "Please provide a valid Contact Number: "
+    #         read -p "Contact Number: " contactNumber
+    #     fi
+    # done
 
     read -p "Email Address (As per TAR UMT format): " email
     # TAR UMT's style of email address, either xxxxxx-xx00@student.tarc.edu.my or xxx@tarc.edu.my
-    while true; do
-    do
-        if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]@tarc\.edu\.my$ ]]; then
-            break
-        else
-            echo "Please provide a valid Email Address (As per TAR UMT format): "
-            read -p "Email Address (As per TAR UMT format): " email
-        fi
-    done
+    # while true; do
+    #     if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]@tarc\.edu\.my$ ]]; then
+    #         break
+    #     else
+    #         echo "Please provide a valid Email Address (As per TAR UMT format): "
+    #         read -p "Email Address (As per TAR UMT format): " email
+    #     fi
+    # done
 
 
     echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
@@ -95,6 +77,8 @@ registerPatron() {
     
     registerCondition
 }
+
+registerPatron
 
 # Validation for search condition
 searchCondition() {
@@ -117,14 +101,13 @@ searchCondition() {
 
 # Search Patron
 searchPatron() {
-    centerAlign "Search Patron Details"
-    centerAlign "____________________"
+    echo "Search Patron Details"
+    echo "____________________"
     echo
 
     # Read data from patron.txt
     read -p "Enter Patron ID to search: " patronID 
     while true; do
-    do
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
             break
         else
@@ -176,10 +159,6 @@ searchPatron() {
     # done  
 
     # Display Patron details according patronID
-    for i in {1..100}
-    do
-        printf "_"
-    done
     echo
     echo "Full Name:" ${patronDetailsArray[1]}
     echo "Contact Number:" ${patronDetailsArray[2]}
