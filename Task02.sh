@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# Function to print centered text
+print_centered() {
+  local cols=$(term_width)
+  local text_length=${#1}
+  local half_input_length=$(( $text_length / 2 ))
+  local half_terminal_width=$(( $cols / 2 ))
+  local start_position=$(( $half_terminal_width - $half_input_length ))
+
+  # Ensure start_position is not negative (occurs when text is longer than terminal width)
+  if (( $start_position < 0 )); then
+    start_position=0
+  fi
+
+  # Print spaces first using echo
+  echo -n "$(seq -s " " $((start_position + 1)) | tr -d '[:digit:]')"
+  # Then print the text
+  echo "$1"
+
+  # Print the underline using echo
+  echo -n "$(seq -s " " $((start_position + 1)) | tr -d '[:digit:]')"
+  echo "$(seq -s "=" $((text_length + 1)) | tr -d '[:digit:]')"
+}
+
 # Validation for register condition
 registerCondition() {
     echo -e "Register Another Patron? (y)es or (q)uit: \n" 
@@ -24,7 +47,7 @@ registerCondition() {
 registerPatron() {
     # patronList = patron.txt
     echo
-    echo "Patron Registration"
+    print_centered "Patron Registration"
     echo "====================="
 
     read -p "Patron ID (As per TAR UMT format): " patronID
