@@ -112,5 +112,23 @@ AddVenue() {
 
 }
 
-AddVenue
+while true; do
+  read -p "Input A to read, B to Add, Q to quit:" $option
+  case $option in
+    "A"|"a")
+      echo "Read"
+      ;;
+    "B"|"b")
+      echo "Add"
+      AddVenue
+      ;;
+    "Q"|"q")
+      echo "Quit"
+      break;
+      ;;
+    *)
+      echo "Invalid Input, please try again"
+      ;;
+  esac
+done
 

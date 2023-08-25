@@ -1,1 +1,3 @@
 BlockName:RoomNumber:RoomType:Capacity:Remarks
+B:B001:Lecture Hall:26:For SGS use only
+B:B002:Lecture Hall:26:For SGS use only2
