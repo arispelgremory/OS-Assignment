@@ -112,7 +112,7 @@ BookingVenue() {
 }
 
 # Validation for patron details condition
-patronDetailsCondition() {
+PatronDetailsCondition() {
     read -p "Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu:" proceedBooking 
 
     case $proceedBooking in
@@ -125,13 +125,13 @@ patronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            patronDetailsCondition
+            PatronDetailsCondition
             ;;
     esac
 }
 
 # Patron Details Validation
-patronDetailsValidation() {
+PatronDetailsValidation() {
     echo "Patron Details Validation"
     echo "==========================="
 
@@ -286,10 +286,10 @@ SearchVenue() {
 
     # Read data that starts with blockName
     venueDetails=$(grep "^$blockName:" $file | tr '\n' ',' )
-    format_data "$venueDetails"
+    FormatData "$venueDetails"
 }
 
-format_data() {
+FormatData() {
     local data="$1"
 
     # Define a function to print a divider line
@@ -356,7 +356,7 @@ BackToMenu() {
 # Task02.sh
 
 # Validation for register condition
-registerCondition() {
+RegisterCondition() {
     echo -e "Register Another Patron? (y)es or (q)uit: \n" 
     read -p "Press (q) to return to ${bold}University Venue Management Menu. " newRegistration
 
@@ -370,7 +370,7 @@ registerCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            registerCondition
+            RegisterCondition
             ;;
     esac
 }
@@ -424,11 +424,11 @@ RegisterPatron() {
     echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
     echo
     
-    registerCondition
+    RegisterCondition
 }
 
 # Validation for search condition
-searchCondition() {
+SearchCondition() {
     echo "Search Another Person? (y)es or (q)uit :"
     read -p "Press (q) to return to University Venue Management Menu. " searchAnother
 
@@ -442,7 +442,7 @@ searchCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            searchCondition
+            SearchCondition
             ;;
     esac
 }
@@ -486,7 +486,7 @@ SearchPatron() {
     echo -e "Email Address (As per TAR UMT format):" ${patronDetailsArray[3]} "\n"
     echo 
 
-    searchCondition
+    SearchCondition
 }
 
 # Task01.sh
