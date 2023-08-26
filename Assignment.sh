@@ -31,6 +31,143 @@ print_centered() {
   echo "$(seq -s "=" $((text_length + 1)) | tr -d '[:digit:]')"
 }
 
+# Task04.sh
+# Validation for venue condition
+BookingVenueCondition() {
+    read -p "Press ${bold}(s) ${normal}to save and generate the venue booking details or Press ${bold}(c) ${normal} to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
+
+    case $newBooking in
+        "s"|"S")
+            echo "Venue Book Successfully!"
+            echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+            ;;
+        "c"|"C")
+            echo "Venue Booking Cencelled."
+            echo "Returning to Main Menu."
+            MainMenu
+            ;;
+        *)
+            echo "Please provide a valid choice!" 
+            BookingVenueCondition
+            ;;
+    esac
+}
+
+# Booking Venue
+BookingVenue() {
+    print_centered "Booking Venue"
+
+    read -p "Please enter the Room Number: " roomNumber
+
+    echo "Room Type:" $labType
+    echo "Capacity:" $capacity
+    echo "Remarks:" $remarks
+    echo -e "Status:" $status "\n"
+
+    echo "Notes: The booking hours shall be from 8am to 8pm only. The booking duration shall be at least 30 minuts per booking."
+
+    echo -e "\nPlease ${bold}enter ${normal}the following details:\n"
+
+    while true; do
+        read -p "Booking Date (mm/dd/yy): " bookingDate
+        if [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then
+            break;
+        else
+            echo "Invalid date format. Please enter in the format mm/dd/yy."
+        fi
+    done;
+
+    while true; do
+        read -p "Time From (hh:mm): " timeDurationFrom
+
+        if [[ !$timeDurationFrom =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+            echo "Invalid time format. Please enter in the format hh:mm."
+        else
+            break;
+        fi
+    done;
+
+    while true; do
+        read -p "Time to (hh:mm): " timeDurationTo
+        if [[ !$timeDurationTo =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+            echo "Invalid time format. Please enter in the format hh:mm."
+        else
+            break
+        fi
+    done;
+    
+    read -p "Reasons for Booking: " reasons
+    # Only checks for whether it is empty or not
+    while true; do
+        if [[ -z $reasons ]]; then
+            echo "Please provide a valid Reasons for Booking: "
+            read -p "Reasons for Booking: " reasons
+        else
+            break
+        fi
+    done
+
+    BookingVenueCondition
+    # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+}
+
+# Validation for patron details condition
+patronDetailsCondition() {
+    read -p "Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu:" proceedBooking 
+
+    case $proceedBooking in
+        "n"|"n")
+            bookingVenue
+            ;;
+        "q"|"Q")
+            echo -e "Returning to Main Menu.\n"
+            MainMenu
+            ;;
+        *)
+            echo "Please provide a valid choice!" 
+            patronDetailsCondition
+            ;;
+    esac
+}
+
+# Patron Details Validation
+patronDetailsValidation() {
+    echo "Patron Details Validation"
+    echo "==========================="
+
+    # Read data from patron.txt
+    read -p "Please enter Patron's ID Number: " patronID
+    while true
+    do
+        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
+            break
+        else
+            echo "Please provide a valid Patron ID (As per TAR UMT format): "
+            read -p "Patron ID (As per TAR UMT format): " patronID
+        fi
+    done
+
+    if [ ! -f patron.txt ]; then
+        echo "Error: patron.txt file does not exist in the current directory."
+        return
+    fi
+
+    # Search with PatronID
+    patronDetails=$(grep "^$patronID:" patron.txt)
+
+    if [ -z "$patronDetails" ]; then
+        echo "Error: No patron found with ID $patronID."
+        return
+    fi
+
+    IFS=":"
+    read -ra patronDetailsArray <<< "$patronDetails"
+
+    echo
+    echo "Patron Name:" ${patronDetailsArray[1]}
+    echo
+}
+
 # Task03.sh
 # Add Venue Funciton
 AddVenue() {
@@ -56,7 +193,7 @@ AddVenue() {
 
     while true; do
       read -p "${normal}Room Type:" roomType
-      if [[ ! $roomType == "Lecture Hall" || $roomType == "Tutorial Room" || $roomType == "Lab" ]]; then
+      if [[ ! ($roomType=="Lecture Hall" || $roomType=="Tutorial Room" || $roomType=="Lab") ]]; then
         echo "Invalid Input, only accepts input such as:Lecture Hall, Tutorial Room and Lab."
       else
         break;
@@ -64,13 +201,14 @@ AddVenue() {
     done
 
     while true; do
-      read -p "Capacity:" capacity
-      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,2}[0-9]{3}$ ]]; then
-        echo "Invalid Input, please try again"
-      else
-        break;
-      fi
+        read -p "Capacity: " capacity
+        if [[ ! $capacity =~ ^[0-9]+$ ]]; then
+            echo "Invalid Input, please enter a valid number for capacity."
+        else
+            break
+        fi
     done
+
 
     read -p "Remarks:" remarks
     # Allow empty
@@ -103,10 +241,8 @@ AddVenue() {
             AddVenue 
 
         elif [ "$action" = "q" ] || [ "$action" = "Q" ]; then
-
-            read -p "Press (q) to return to ${bold}University Venue Management Menu." quitResult
-            is_valid=1  # Exit the loop
-            MainMenu
+            BackToMenu
+            break;
         else
             echo "Please provide a valid choice"
         fi
@@ -139,9 +275,8 @@ SearchVenue() {
         return
     fi
 
-    # Print out the first line
+    # Print out the first line and remove the block name, then replace \t with :
     header=$(grep "BlockName" $file |  sed 's/^BlockName://' | tr ':' '\t')
-
     echo $header
 
     # Read data that starts with blockName
@@ -162,18 +297,19 @@ format_data() {
     ROOM_TYPE_WIDTH=20
     CAPACITY_WIDTH=9
     REMARKS_WIDTH=30
+    STATUS_WIDTH=12
 
     # Print header
     print_divider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
-    echo "| RoomNumber | RoomType            | Capacity | Remarks                       |"
+    echo "| RoomNumber | RoomType            | Capacity | Remarks                       | Status      |"
     print_divider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
 
     # Convert comma-separated records to array
     IFS=',' read -ra records <<< "$data"
     for record in "${records[@]}"; do
         if [ -n "$record" ]; then
-            IFS=':' read -r _ roomNumber roomType capacity remarks <<< "$record"  # The underscore _ is a throwaway variable
-            echo "| ${roomNumber}$(head -c $(($ROOM_NUM_WIDTH - ${#roomNumber} - 1)) < /dev/zero | tr '\0' ' ') | ${roomType}$(head -c $(($ROOM_TYPE_WIDTH - ${#roomType} - 1)) < /dev/zero | tr '\0' ' ') | ${capacity}$(head -c $(($CAPACITY_WIDTH - ${#capacity} - 1)) < /dev/zero | tr '\0' ' ') | ${remarks}$(head -c $(($REMARKS_WIDTH - ${#remarks} - 1)) < /dev/zero | tr '\0' ' ') |"
+            IFS=':' read -r _ roomNumber roomType capacity remarks status <<< "$record"  # The underscore _ is a throwaway variable
+            echo "| ${roomNumber}$(head -c $(($ROOM_NUM_WIDTH - ${#roomNumber} - 1)) < /dev/zero | tr '\0' ' ') | ${roomType}$(head -c $(($ROOM_TYPE_WIDTH - ${#roomType} - 1)) < /dev/zero | tr '\0' ' ') | ${capacity}$(head -c $(($CAPACITY_WIDTH - ${#capacity} - 1)) < /dev/zero | tr '\0' ' ') | ${remarks}$(head -c $(($REMARKS_WIDTH - ${#remarks} - 1)) < /dev/zero | tr '\0' ' ') | ${status}$(head -c $(($STATUS_WIDTH - ${#status} - 1)) < /dev/zero | tr '\0' ' ') |"
         fi
     done
 
@@ -212,7 +348,6 @@ BackToMenu() {
     esac
 }
 
-
 # Task02.sh
 
 # Validation for register condition
@@ -223,11 +358,10 @@ registerCondition() {
     case $newRegistration in
         "y"|"Y")
             echo "Patron registered successfully!"
-            registerPatron
+            RegisterPatron
             ;;
         "q"|"Q")
-            echo "Main Menu"
-
+            MainMenu
             ;;
         *)
             echo "Please provide a valid choice!" 
@@ -237,56 +371,50 @@ registerCondition() {
 }
 
 # Register Patron
-registerPatron() {
-    # patronList = patron.txt
-    echo
-    print_centered "Patron Registration"
+RegisterPatron() {
+    echo "Patron Registration"
     echo "====================="
 
-    read -p "Patron ID (As per TAR UMT format): " patronID
     # Regular Expression check to check student / Staff ID valid or not
     while true; do
-        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[$patronID =~ ^[0-9]{4}$]]; then
+        read -p "Patron ID (As per TAR UMT format): " patronID
+        if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
             break
         else
-            echo "Please provide a valid Patron ID (As per TAR UMT format): "
-            read -p "Patron ID (As per TAR UMT format): " patronID
+            echo "Please provide a valid Patron ID (As per TAR UMT format)."
         fi
     done
 
-    read -p "Patron Full Name (As per NRIC): " patronName
-    # Name just accpets character inputs
-    # while true; do
-    #     if [[ $patronName =~ ^[a-zA-Z]+$ ]]; then
-    #         break
-    #     else
-    #         echo "Please provide a valid Patron Full Name (As per NRIC): "
-    #         read -p "Patron Full Name (As per NRIC): " patronName
-    #     fi
-    # done
+    # Name accepts character inputs
+    while true; do
+        read -p "Patron Full Name (As per NRIC): " patronName
 
-    read -p "Contact Number: " contactNumber
+        if [[ $patronName=~"^[A-Za-z\s'-]+$" ]]; then
+            break
+        else
+            echo "Invalid name. Please use only letters, spaces, hyphens, and apostrophes."
+        fi
+    done
+
     # Malaysian style phone number 010-0000000 or 010-00000000
     while true; do
+        read -p "Contact Number: " contactNumber
         if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
             break
         else
-            echo "Please provide a valid Contact Number: "
-            read -p "Contact Number: " contactNumber
+            echo "Please provide a valid Contact Number."
         fi
     done
 
-    read -p "Email Address (As per TAR UMT format): " email
-    # TAR UMT's style of email address, either xxxxxx-xx00@student.tarc.edu.my or xxx@tarc.edu.my
+    # TAR UMT's style of email address
     while true; do
-        if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]@tarc\.edu\.my$ ]]; then
+        read -p "Email Address (As per TAR UMT format): " email
+        if [[ $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@student\.tarc\.edu\.my$ ]] || [[ $email =~ ^[a-z]+@tarc\.edu\.my$ ]]; then
             break
         else
-            echo "Please provide a valid Email Address (As per TAR UMT format): "
-            read -p "Email Address (As per TAR UMT format): " email
+            echo "Please provide a valid Email Address (As per TAR UMT format)."
         fi
     done
-
 
     echo "$patronID:$patronName:$contactNumber:$email" >> "./patron.txt"
     echo
@@ -297,14 +425,15 @@ registerPatron() {
 # Validation for search condition
 searchCondition() {
     echo "Search Another Person? (y)es or (q)uit :"
-    read "Press (q) to return to University Venue Management Menu. " searchAnother
+    read -p "Press (q) to return to University Venue Management Menu. " searchAnother
 
     case $searchAnother in
         "y"|"Y")
-            searchPatron
+            SearchPatron
             ;;
         "q"|"Q")
             echo "Returning to Main Menu."
+            MainMenu
             ;;
         *)
             echo "Please provide a valid choice!" 
@@ -314,22 +443,21 @@ searchCondition() {
 }
 
 # Search Patron
-searchPatron() {
+SearchPatron() {
     echo "Search Patron Details"
     echo "____________________"
     echo
 
     # Read data from patron.txt
-    read -p "Enter Patron ID to search: " patronID 
     while true; do
+        read -p "Enter Patron ID to search: " patronID 
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
             break
         else
-            echo "Please provide a valid Patron ID (As per TAR UMT format): "
-            read -p "Patron ID (As per TAR UMT format): " patronID
+            echo "Please provide a valid Patron ID (As per TAR UMT format)."
         fi
     done
-    
+
     if [ ! -f patron.txt ]; then
         echo "Error: patron.txt file does not exist in the current directory."
         return
@@ -346,33 +474,7 @@ searchPatron() {
     IFS=":"
     read -ra patronDetailsArray <<< "$patronDetails"
 
-    # readarray -t patronList < patron.txt
-    # IFS=$'\n'
-
-    # # Set loop number
-    # counter=0
-    # for getPatronList in ${patronList[@]}; do
-    #     ((counter++))
-    # done
-
-    # # Search PatronID
-    # for (( i=0; i<$counter; i++ )); do
-    #     IFS=$'\n'
-    #     for perItem in ${patronList[arrayCounter]}; do        
-    #         IFS=$':'
-    #         read -ra patronDetailsArray <<< $perItem
-    #         if [ ${patronDetailsArray[0]} != $patronID ]; then  
-    #             (( arrayCounter++ ))
-    #         else
-    #             arrayCounter=$arrayCounter
-    #             (( i=3 ))
-    #             # echo "Patron Details:" ${patronDetailsArray[@]}
-    #             break
-    #         fi
-    #     done
-    # done  
-
-    # Display Patron details according patronID
+    # Display Patron details according to patronID
     echo
     echo "Full Name:" ${patronDetailsArray[1]}
     echo "Contact Number:" ${patronDetailsArray[2]}
@@ -381,6 +483,7 @@ searchPatron() {
 
     searchCondition
 }
+
 
 
 # Task01.sh
@@ -396,13 +499,13 @@ MainMenu() {
 
     case $choice in
         "A" | "a")
-            registerPatron
+            RegisterPatron
             # bash Task02.sh;
 
             ;;
         "B" | "b")
             # echo "Search Patron Details\n"
-            searchPatron
+            SearchPatron
             ;;
         "C" | "c")
             # echo "Add New Venue\n"
@@ -414,13 +517,15 @@ MainMenu() {
             ;;
         "E" | "e")
             # echo "Book Venue\n"
-            
+            BookingVenue
             ;;
         "Q" | "q")
-            echo "Exit from Program\n"
+            echo -e "Thank you for using University Venue Management Menu System\n"
+            exit 98;
             ;;
         *)
-            echo "Invalid Choice\n"
+            echo -e "Invalid Choice\n"
+            MainMenu
             ;;
     esac
 
