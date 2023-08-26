@@ -178,6 +178,8 @@ AddVenue() {
       if [[ ! $blockName =~ ^[a-zA-Z]{1,3}$ ]]; then
         echo "Invalid Input, please try again"
       else
+        # Convert lower case to upper case
+        blockName=$(echo -e $blockName | tr '[a-z]' '[A-Z]')
         break;
       fi
     done
@@ -187,13 +189,15 @@ AddVenue() {
       if [[ ! $roomNumber =~ ^[a-zA-Z]{1,3}([a-zA-Z]{0,1}[0-9]{3}|[0-9]{3}[a-zA-Z]{0,1})$ ]]; then
         echo "Invalid Input, please try again"
       else
+        # Convert lower case to upper case
+        roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
         break;
       fi
     done
 
     while true; do
       read -p "${normal}Room Type:" roomType
-      if [[ ! ($roomType=="Lecture Hall" || $roomType=="Tutorial Room" || $roomType=="Lab") ]]; then
+      if [[ ! ($roomType == "Lecture Hall" || $roomType == "Tutorial Room" || $roomType == "Lab") ]]; then
         echo "Invalid Input, only accepts input such as:Lecture Hall, Tutorial Room and Lab."
       else
         break;
@@ -213,8 +217,9 @@ AddVenue() {
     read -p "Remarks:" remarks
     # Allow empty
 
-    read -p "Status (by default): Available"
+    echo -e "Status (by default): Available\n"
     status="Available" # Default is Available
+
     echo -e "\n"
 
     # Specify the file to read
@@ -224,11 +229,11 @@ AddVenue() {
     if [[ ! -f $file ]]; then
       echo "$file not found."
       echo "Creating $file."
-      echo BlockName:RoomNumber:RoomType:Capacity:Remarks >> $file
+      echo BlockName:RoomNumber:RoomType:Capacity:Remarks:Status >> $file
     fi
 
     # Append data into venue.txt
-    echo "$blockName:$roomNumber:$roomType:$capacity:$remarks" >> $file
+    echo "$blockName:$roomNumber:$roomType:$capacity:$remarks:$status" >> $file
     
 
     is_valid=0
@@ -484,10 +489,9 @@ SearchPatron() {
     searchCondition
 }
 
-
-
 # Task01.sh
 MainMenu() {
+    clear
     echo -e "${bold}University Venue Management Menu${normal}\n"
     echo -e "A – Register New Patron\nB – Search Patron Details\nC – Add New Venue\nD – List Venue\nE – Book Venue"
     echo -e "\nQ – Exit from Program\n"
@@ -501,7 +505,6 @@ MainMenu() {
         "A" | "a")
             RegisterPatron
             # bash Task02.sh;
-
             ;;
         "B" | "b")
             # echo "Search Patron Details\n"

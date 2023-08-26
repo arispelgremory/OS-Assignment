@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Validation for venue condition
-bookingVenueCondition() {
+BookingVenueCondition() {
     read -p "Press (s) to save and generate the venue booking details or Press (c) to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
 
     case $newBooking in
@@ -15,13 +15,13 @@ bookingVenueCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            bookingVenueCondition
+            BookingVenueCondition
             ;;
     esac
 }
 
 # Booking Venue
-bookingVenue() {
+BookingVenue() {
     echo "Booking Venue"
     echo "================"
 
@@ -44,7 +44,7 @@ bookingVenue() {
     read -p "Time to (hh:mm): " timeDurationTo
     read -p "Reasons for Booking: " reasons
 
-    bookingVenueCondition
+    BookingVenueCondition
     # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
 }
 
@@ -54,7 +54,7 @@ patronDetailsCondition() {
 
     case $proceedBooking in
         "n"|"n")
-            bookingVenue
+            BookingVenue
             ;;
         "q"|"Q")
             echo "Returning to Main Menu."
