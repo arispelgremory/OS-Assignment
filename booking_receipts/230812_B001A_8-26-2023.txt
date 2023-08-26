@@ -1,0 +1,13 @@
++--------------------------------------------------------------------------------+
+|                             Venue Booking Receipt                              |
+|                                                                                |
+|                 Patron ID : 230812   Patron Name : Tan Mei Lee                 |
+|                              Room Number : B001A                               |
+|                            Date Booking: 02/28/2023                            |
+|                       Time From: 14:00   Time To: 16:00                        |
+|                    Reason for Booking: For FYP presentation                    |
+|                                                                                |
+|                          This is a computer generated                          |
+|                      receipt with no signature required.                       |
+|                          Printed on 8-26-2023 11.42PM                          |
++--------------------------------------------------------------------------------+

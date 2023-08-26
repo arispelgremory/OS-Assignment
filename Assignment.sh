@@ -4,13 +4,13 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 # Function to get the terminal width
-term_width() {
+TermWidth() {
   tput cols
 }
 
 # Function to print centered text
-print_centered() {
-  local cols=$(term_width)
+PrintCentered() {
+  local cols=$(TermWidth)
   local text_length=${#1}
   local half_input_length=$(( $text_length / 2 ))
   local half_terminal_width=$(( $cols / 2 ))
@@ -32,37 +32,121 @@ print_centered() {
 }
 
 # Task04.sh
+# Generate Receipt
+GenerateReceipt() {
+    local patronID=$1
+    local patronName=$2
+    local roomNumber=$3
+    local dateBooking=$4
+    local timeFrom=$5
+    local timeTo=$6
+    local reason=$7
+
+    # Define the width of the receipt
+    width=80
+
+    # Function to print a centered string
+    print_centered() {
+        local str="$1"
+        local total_length="${#str}"
+        local left_padding=$(( (width - total_length) / 2 ))
+        local right_padding=$(( width - total_length - left_padding ))
+        printf "|%*s%s%*s|\n" "$left_padding" "" "$str" "$right_padding" ""
+    }
+
+    currentDate=$(date +"%-m-%-d-%Y")
+    currentTime=$(date +"%I.%M%p")
+    fileName="${patronID}_${roomNumber}_${currentDate}.txt"
+
+    {
+        # Print the receipt
+        echo "+$(printf '%.s-' {1..80})+"
+        print_centered "Venue Booking Receipt"
+        echo "|$(printf '%.s ' {1..80})|"
+        # Invoke for Patron ID and Name on the same line
+        combined_info="Patron ID : $patronID   Patron Name : $patronName"
+        print_centered "$combined_info"
+        print_centered "Room Number : $roomNumber"
+        print_centered "Date Booking: $dateBooking"
+
+
+
+        combined_info2="Time From: $timeFrom   Time To: $timeTo"
+        print_centered "$combined_info2"
+
+        print_centered "Reason for Booking: $reason"
+        echo "|$(printf '%.s ' {1..80})|"
+        print_centered "This is a computer generated"
+        print_centered "receipt with no signature required."
+
+        print_centered "Printed on $currentDate $currentTime"
+        echo "+$(printf '%.s-' {1..80})+"
+    } > $fileName
+
+    # Move file into booking receipt folder
+    mkdir booking_receipts
+    mv $fileName booking_receipts
+    
+}
+
 # Validation for venue condition
 BookingVenueCondition() {
+    local patronID=$1
+
     read -p "Press ${bold}(s) ${normal}to save and generate the venue booking details or Press ${bold}(c) ${normal} to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
 
     case $newBooking in
         "s"|"S")
             echo "Venue Book Successfully!"
             echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+            GenerateReceipt $patronID $patronName $roomNumber $bookingDate $timeDurationFrom $timeDurationTo $reasons
+            MainMenu
             ;;
         "c"|"C")
-            echo "Venue Booking Cencelled."
+            echo "Venue Booking Cancelled."
             echo "Returning to Main Menu."
             MainMenu
             ;;
         *)
             echo "Please provide a valid choice!" 
-            BookingVenueCondition
+            BookingVenueCondition $patronID
             ;;
     esac
 }
 
 # Booking Venue
 BookingVenue() {
-    print_centered "Booking Venue"
+    local patronID=$1
 
-    read -p "Please enter the Room Number: " roomNumber
+    PrintCentered "Booking Venue"
 
-    echo "Room Type:" $labType
-    echo "Capacity:" $capacity
-    echo "Remarks:" $remarks
-    echo -e "Status:" $status "\n"
+    while true; do
+      read -p "Please enter the Room Number:" roomNumber
+      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,3}([a-zA-Z]{0,1}[0-9]{3}|[0-9]{3}[a-zA-Z]{0,1})$ ]]; then
+        echo "Invalid Input, please try again"
+      else
+        # Convert lower case to upper case
+        roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
+        break;
+      fi
+    done
+
+    # Grab data from venue.txt
+    roomDetails=$(grep "$roomNumber" venue.txt)
+
+    # Read Room Number's data
+    if [[ ! $roomDetails ]] ;then
+        echo "Error: No room found with Room Number $roomNumber."
+        BookingVenue $patronID
+        return
+    fi
+
+    IFS=':' read -r _ roomNumber roomType capacity remarks status <<< "$roomDetails"  # The underscore _ is a throwaway variable
+
+    echo "Room Type: $roomType" 
+    echo "Capacity: $capacity" 
+    echo "Remarks: $remarks" 
+    echo -e "Status: $status\n"
 
     echo "Notes: The booking hours shall be from 8am to 8pm only. The booking duration shall be at least 30 minuts per booking."
 
@@ -80,7 +164,7 @@ BookingVenue() {
     while true; do
         read -p "Time From (hh:mm): " timeDurationFrom
 
-        if [[ !$timeDurationFrom =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+        if [[ ! $timeDurationFrom =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
             echo "Invalid time format. Please enter in the format hh:mm."
         else
             break;
@@ -89,16 +173,17 @@ BookingVenue() {
 
     while true; do
         read -p "Time to (hh:mm): " timeDurationTo
-        if [[ !$timeDurationTo =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+        if [[ ! $timeDurationTo =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
             echo "Invalid time format. Please enter in the format hh:mm."
         else
             break
         fi
     done;
     
-    read -p "Reasons for Booking: " reasons
+    
     # Only checks for whether it is empty or not
     while true; do
+        read -p "Reasons for Booking: " reasons
         if [[ -z $reasons ]]; then
             echo "Please provide a valid Reasons for Booking: "
             read -p "Reasons for Booking: " reasons
@@ -107,17 +192,20 @@ BookingVenue() {
         fi
     done
 
-    BookingVenueCondition
+    echo "Booking Venue: $patronID"
+    BookingVenueCondition "$patronID"
     # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
 }
 
 # Validation for patron details condition
 PatronDetailsCondition() {
-    read -p "Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu:" proceedBooking 
+    local patronID=$1
+
+    read -p "Press ${bold}(n)${normal} to proceed ${bold}Book Venue${normal} or ${bold}(q)${normal} to return to ${bold}University Venue Management Menu${normal}:" proceedBooking 
 
     case $proceedBooking in
         "n"|"n")
-            bookingVenue
+            BookingVenue $patronID
             ;;
         "q"|"Q")
             echo -e "Returning to Main Menu.\n"
@@ -125,7 +213,7 @@ PatronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            PatronDetailsCondition
+            PatronDetailsCondition $patronID
             ;;
     esac
 }
@@ -137,8 +225,7 @@ PatronDetailsValidation() {
 
     # Read data from patron.txt
     read -p "Please enter Patron's ID Number: " patronID
-    while true
-    do
+    while true; do
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
             break
         else
@@ -163,15 +250,15 @@ PatronDetailsValidation() {
     IFS=":"
     read -ra patronDetailsArray <<< "$patronDetails"
 
-    echo
-    echo "Patron Name:" ${patronDetailsArray[1]}
-    echo
+    echo -e "\nPatron Name:${patronDetailsArray[1]}\n" 
+
+    PatronDetailsCondition $patronID
 }
 
 # Task03.sh
 # Add Venue Funciton
 AddVenue() {
-    print_centered "Add New Venue"
+    PrintCentered "Add New Venue"
    
     while true; do
       read -p "${normal}Block Name:" blockName
@@ -256,7 +343,7 @@ AddVenue() {
 }
 
 SearchVenue() {
-    print_centered "List Venue Details"
+    PrintCentered "List Venue Details"
 
     # Specify the block
     while true; do
@@ -293,7 +380,7 @@ FormatData() {
     local data="$1"
 
     # Define a function to print a divider line
-    print_divider() {
+    PrintDivider() {
         echo "+$(head -c $1 < /dev/zero | tr '\0' '-')+$(head -c $2 < /dev/zero | tr '\0' '-')+$(head -c $3 < /dev/zero | tr '\0' '-')+$(head -c $4 < /dev/zero | tr '\0' '-')+"
     }
 
@@ -305,9 +392,9 @@ FormatData() {
     STATUS_WIDTH=12
 
     # Print header
-    print_divider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
+    PrintDivider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
     echo "| RoomNumber | RoomType            | Capacity | Remarks                       | Status      |"
-    print_divider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
+    PrintDivider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
 
     # Convert comma-separated records to array
     IFS=',' read -ra records <<< "$data"
@@ -319,7 +406,7 @@ FormatData() {
     done
 
     # Print footer
-    print_divider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
+    PrintDivider $ROOM_NUM_WIDTH $ROOM_TYPE_WIDTH $CAPACITY_WIDTH $REMARKS_WIDTH
 
     while true; do
 
@@ -519,8 +606,7 @@ MainMenu() {
             SearchVenue
             ;;
         "E" | "e")
-            # echo "Book Venue\n"
-            BookingVenue
+            PatronDetailsValidation
             ;;
         "Q" | "q")
             echo -e "Thank you for using University Venue Management Menu System\n"
