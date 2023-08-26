@@ -49,7 +49,9 @@ GenerateReceipt() {
     } > $fileName
 
     # Move file into booking receipt folder
-    mkdir booking_receipts
+    if [ ! -d booking_receipts ]; then
+        mkdir booking_receipts
+    fi
     mv $fileName booking_receipts
     
 }
