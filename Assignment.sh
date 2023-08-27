@@ -154,14 +154,45 @@ BookingVenue() {
 
     echo -e "\nPlease ${bold}enter ${normal}the following details:\n"
 
+    # Function to convert date mm/dd/yy to Julian Day Number (JDN)
+    DateToJDN() {
+        local date="$1"
+        local month="${date%%/*}"
+        date="${date#*/}"
+        local day="${date%%/*}"
+        local year="20${date##*/}"  # Assuming 2000s for yy format
+
+        # Formula to convert Gregorian date to JDN
+        echo $(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
+    }
+
     while true; do
         read -p "Booking Date (mm/dd/yy): " bookingDate
+
         if [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then
-            break;
+            # Convert both the current date and booking date to JDN for comparison
+            current_jdn=$(DateToJDN $(date +"%m/%d/%Y"))
+            booking_jdn=$(DateToJDN "$bookingDate")
+
+            if (( booking_jdn <= current_jdn )); then
+                echo "Booking date must be at least one day in the future. Please enter a valid date."
+            else
+                break
+            fi
         else
             echo "Invalid date format. Please enter in the format mm/dd/yy."
         fi
-    done;
+    done
+
+
+
+
+    ToMinutes() {
+        local time="$1"
+        local hours="${time%:*}"
+        local minutes="${time#*:}"
+        echo $((hours * 60 + minutes))
+    }
 
     while true; do
         read -p "Time From (hh:mm): " timeDurationFrom
@@ -169,18 +200,27 @@ BookingVenue() {
         if [[ ! $timeDurationFrom =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
             echo "Invalid time format. Please enter in the format hh:mm."
         else
-            break;
+            break
         fi
-    done;
+    done
 
     while true; do
         read -p "Time to (hh:mm): " timeDurationTo
         if [[ ! $timeDurationTo =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
             echo "Invalid time format. Please enter in the format hh:mm."
         else
-            break
+            # Convert times to minutes for comparison
+            start_time_minutes=$(ToMinutes "$timeDurationFrom")
+            end_time_minutes=$(ToMinutes "$timeDurationTo")
+
+            if (( end_time_minutes <= start_time_minutes )); then
+                echo "End time cannot be earlier than or equal to the start time. Please enter again."
+            else
+                break
+            fi
         fi
-    done;
+    done
+
     
     
     # Only checks for whether it is empty or not
@@ -369,10 +409,6 @@ SearchVenue() {
         return
     fi
 
-    # Print out the first line and remove the block name, then replace \t with :
-    header=$(grep "BlockName" $file |  sed 's/^BlockName://' | tr ':' '\t')
-    echo $header
-
     # Read data that starts with blockName
     venueDetails=$(grep "^$blockName:" $file | tr '\n' ',' )
     FormatData "$venueDetails"
@@ -428,8 +464,7 @@ FormatData() {
 }
 
 BackToMenu() {
-    echo -e "Press (q) to return to ${bold}University Venue Management Menu."
-    read quitResult
+    read -p "Press (q) to return to ${bold}University Venue Management Menu." quitResult
 
     case $quitResult in
         "q"|"Q")
@@ -443,11 +478,9 @@ BackToMenu() {
 }
 
 # Task02.sh
-
 # Validation for register condition
 RegisterCondition() {
-    echo -e "Register Another Patron? (y)es or (q)uit: \n" 
-    read -p "Press (q) to return to ${bold}University Venue Management Menu. " newRegistration
+    read -p "Register Another Patron? (y)es or (q)uit: "  newRegistration
 
     case $newRegistration in
         "y"|"Y")
@@ -455,7 +488,7 @@ RegisterCondition() {
             RegisterPatron
             ;;
         "q"|"Q")
-            MainMenu
+            BackToMenu
             ;;
         *)
             echo "Please provide a valid choice!" 
@@ -493,10 +526,10 @@ RegisterPatron() {
     # Malaysian style phone number 010-0000000 or 010-00000000
     while true; do
         read -p "Contact Number: " contactNumber
-        if [[ $contactNumber =~ ^[0-9]{3}-[0-9]{7,8}$ ]]; then
+        if [[ $contactNumber =~ ^01[0-9]{1}-[0-9]{7,8}$ ]]; then
             break
         else
-            echo "Please provide a valid Contact Number."
+            echo "Please provide a valid Contact Number in the format of 01X-XXXXXXX."
         fi
     done
 
@@ -518,16 +551,14 @@ RegisterPatron() {
 
 # Validation for search condition
 SearchCondition() {
-    echo "Search Another Person? (y)es or (q)uit :"
-    read -p "Press (q) to return to University Venue Management Menu. " searchAnother
+    read -p "Search Another Person? (y)es or (q)uit :" searchAnother
 
     case $searchAnother in
         "y"|"Y")
             SearchPatron
             ;;
         "q"|"Q")
-            echo "Returning to Main Menu."
-            MainMenu
+            BackToMenu
             ;;
         *)
             echo "Please provide a valid choice!" 
@@ -562,6 +593,7 @@ SearchPatron() {
 
     if [ -z "$patronDetails" ]; then
         echo "Error: No patron found with ID $patronID."
+        SearchPatron
         return
     fi
 
@@ -584,8 +616,7 @@ MainMenu() {
     echo -e "${bold}University Venue Management Menu${normal}\n"
     echo -e "A – Register New Patron\nB – Search Patron Details\nC – Add New Venue\nD – List Venue\nE – Book Venue"
     echo -e "\nQ – Exit from Program\n"
-    echo -e "Please select a choice: "
-    read choice
+    read -p "Please select a choice: " choice
 
     choice=$(echo -e $choice | tr '[a-z]' '[A-Z]')
     echo -e "You have selected ${choice}\n"
@@ -593,18 +624,15 @@ MainMenu() {
     case $choice in
         "A" | "a")
             RegisterPatron
-            # bash Task02.sh;
+            
             ;;
         "B" | "b")
-            # echo "Search Patron Details\n"
             SearchPatron
             ;;
         "C" | "c")
-            # echo "Add New Venue\n"
             AddVenue
             ;;
         "D" | "d")
-            # echo "List Venue\n"
             SearchVenue
             ;;
         "E" | "e")
@@ -619,7 +647,6 @@ MainMenu() {
             MainMenu
             ;;
     esac
-
 }
 
 MainMenu

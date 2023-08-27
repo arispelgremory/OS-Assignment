@@ -2,5 +2,5 @@ BlockName:RoomNumber:RoomType:Capacity:Remarks:Status
 B:B001:Lecture Hall:26:For SGS use only:Available
 B:B002:Lecture Hall:26:For SGS use only2:Unavailable
 K:K301:Tutorial Room:30:For YZ gae:Available
-K:K101:Tutorial:26::Available
 B:B003:Lab:30::Available
+K:K101:Tutorial Room:30:For SGS only:Available
