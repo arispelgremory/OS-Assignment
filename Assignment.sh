@@ -163,18 +163,13 @@ BookingVenue() {
         local year="20${date##*/}"  # Assuming 2000s for yy format
 
         # Formula to convert Gregorian date to JDN
-        a=$(( (14 - month) / 12 ))
-        b=$(( month + 12*a - 3 ))
-        c=$(( 153*b + 2 ))
-        d=$(( c / 5 ))
-        e=$(( 365*(year + 4800 - a) ))
-        f=$(( year / 4 ))
-        g=$(( year / 100 ))
-        h=$(( year / 400 ))
+        # Force base-10 interpretation
+        month=10#$month
+        day=10#$day
+        year=10#$year
         
-        result=$(( day + d + e + f - g + h - 32045 ))
+        result=$(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
         echo $result
-
     }
 
     while true; do
