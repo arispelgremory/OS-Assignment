@@ -57,7 +57,7 @@ GenerateReceipt() {
     currentDate=$(date +"%-m-%-d-%Y")
     currentTime=$(date +"%I.%M%p")
     fileName="${patronID}_${roomNumber}_${currentDate}.txt"
-
+    touch $fileName
     {
         # Print the receipt
         echo "+$(printf '%.s-' {1..80})+"
@@ -68,8 +68,6 @@ GenerateReceipt() {
         print_centered "$combined_info"
         print_centered "Room Number : $roomNumber"
         print_centered "Date Booking: $dateBooking"
-
-
 
         combined_info2="Time From: $timeFrom   Time To: $timeTo"
         print_centered "$combined_info2"
@@ -94,8 +92,10 @@ GenerateReceipt() {
 # Validation for venue condition
 BookingVenueCondition() {
     local patronID=$1
+    local patronName=$2
 
-    read -p "Press ${bold}(s) ${normal}to save and generate the venue booking details or Press ${bold}(c) ${normal} to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
+	
+    read -p "Press ${bold}(S) ${normal}to save and generate the venue booking details or Press ${bold}(c) ${normal} to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
 
     case $newBooking in
         "s"|"S")
@@ -111,7 +111,7 @@ BookingVenueCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            BookingVenueCondition $patronID
+            BookingVenueCondition $patronID $patronName
             ;;
     esac
 }
@@ -119,6 +119,7 @@ BookingVenueCondition() {
 # Booking Venue
 BookingVenue() {
     local patronID=$1
+    local patronName=$2
 
     PrintCentered "Booking Venue"
 
@@ -139,7 +140,7 @@ BookingVenue() {
     # Read Room Number's data
     if [[ ! $roomDetails ]] ;then
         echo "Error: No room found with Room Number $roomNumber."
-        BookingVenue $patronID
+        BookingVenue $patronID $patronName
         return
     fi
 
@@ -163,12 +164,12 @@ BookingVenue() {
         local year="20${date##*/}"  # Assuming 2000s for yy format
 
         # Formula to convert Gregorian date to JDN
-        # Force base-10 interpretation
         month=10#$month
         day=10#$day
         year=10#$year
         
         result=$(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
+        
         echo $result
     }
 
@@ -177,7 +178,7 @@ BookingVenue() {
 
         if [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then
             # Convert both the current date and booking date to JDN for comparison
-            current_jdn=$(DateToJDN $(date +"%m/%d/%Y"))
+            current_jdn=$(DateToJDN $(date +"%m/%d/%y"))
             booking_jdn=$(DateToJDN "$bookingDate")
 
             if (( booking_jdn <= current_jdn )); then
@@ -240,20 +241,20 @@ BookingVenue() {
         fi
     done
 
-    echo "Booking Venue: $patronID"
-    BookingVenueCondition "$patronID"
-    # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+    echo "Booking Venue: $roomNumber"
+    BookingVenueCondition $patronID $patronName 
 }
 
 # Validation for patron details condition
 PatronDetailsCondition() {
     local patronID=$1
+    local patronName=$2
 
     read -p "Press ${bold}(n)${normal} to proceed ${bold}Book Venue${normal} or ${bold}(q)${normal} to return to ${bold}University Venue Management Menu${normal}:" proceedBooking 
 
     case $proceedBooking in
         "n"|"n")
-            BookingVenue $patronID
+            BookingVenue $patronID $patronName
             ;;
         "q"|"Q")
             echo -e "Returning to Main Menu.\n"
@@ -261,7 +262,7 @@ PatronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            PatronDetailsCondition $patronID
+            PatronDetailsCondition $patronID $patronName
             ;;
     esac
 }
@@ -300,7 +301,7 @@ PatronDetailsValidation() {
 
     echo -e "\nPatron Name:${patronDetailsArray[1]}\n" 
 
-    PatronDetailsCondition $patronID
+    PatronDetailsCondition $patronID ${patronDetailsArray[1]}
 }
 
 # Task03.sh
