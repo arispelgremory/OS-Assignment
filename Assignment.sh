@@ -3,6 +3,32 @@
 bold=$(tput bold)
 normal=$(tput sgr0)
 
+# Function to check id
+ValidateID() {
+    local id=$1
+
+    # Regex pattern for Staff ID and Student ID
+    if [[ ! $id =~ ^\d{4}$ && ! $id =~ ^\d{2}[A-Z]{3}\d{5}$ ]]; then
+        echo "Invalid ID format. Please ensure you're using either a staff or student TAR UC ID format."
+        return 1
+    fi
+
+    return 0
+}
+
+# Function to check email
+ValidateEmail() {
+    local email=$1
+
+    # Regex pattern for email
+    if [[ ! $email =~ ^[a-z]+-[a-z]{2}[0-9]{2}@student\.tarc\.edu\.my$ && ! $email =~ ^[a-z]+@tarc\.edu\.my$ ]]; then
+        echo "Invalid email format. Please ensure you're using either a staff or student TAR UC email format."
+        return 1
+    fi
+    return 0
+}
+
+
 # Function to get the terminal width
 TermWidth() {
   tput cols
@@ -94,6 +120,7 @@ GenerateReceipt() {
 # Validation for venue condition
 BookingVenueCondition() {
     local patronID=$1
+    local bookingVenue=$2
 
     read -p "Press ${bold}(s) ${normal}to save and generate the venue booking details or Press ${bold}(c) ${normal} to cancel the Venue Booking and return to University Venue Management Menu:" newBooking
 
@@ -116,21 +143,78 @@ BookingVenueCondition() {
     esac
 }
 
+# Check duplicated data for venue
+ValidateBooking() {
+    local patronID=$1
+    local roomNumber=$2
+    local bookingDate=$3
+    local timeDurationFrom=$4
+    local timeDurationTo=$5
+
+    # Convert times to minutes for easier comparison
+    start_time_minutes=$(ToMinutes "$timeDurationFrom")
+    end_time_minutes=$(ToMinutes "$timeDurationTo")
+
+    # Check if the venue is already booked at the desired date and time
+    while IFS= read -r line; do
+        # Extract details from each booking line
+        local bookedPatronID=$(echo $line | cut -d':' -f1)
+        local bookedRoomNumber=$(echo $line | cut -d':' -f2)
+        local bookedDate=$(echo $line | cut -d':' -f3)
+        local bookedTimeFrom=$(echo $line | cut -d':' -f4)
+        local bookedTimeTo=$(echo $line | cut -d':' -f5)
+
+        # Convert booked times to minutes
+        booked_start_time_minutes=$(ToMinutes "$bookedTimeFrom")
+        booked_end_time_minutes=$(ToMinutes "$bookedTimeTo")
+
+        # Check venue booking overlap
+        if [[ "$roomNumber" == "$bookedRoomNumber" && "$bookingDate" == "$bookedDate" ]]; then
+            if (( booked_start_time_minutes < end_time_minutes && booked_end_time_minutes > start_time_minutes )); then
+                echo "Venue is already booked for the desired time slot. Please choose another venue."
+                return 1
+            fi
+        fi
+
+        # Check patron multiple bookings
+        if [[ "$patronID" == "$bookedPatronID" && "$bookingDate" == "$bookedDate" ]]; then
+            if (( booked_start_time_minutes < end_time_minutes && booked_end_time_minutes > start_time_minutes )); then
+                echo "You already have a booking at the desired time slot."
+                return 1
+            fi
+        fi
+    done < booking.txt
+
+    return 0
+}
+
 # Booking Venue
 BookingVenue() {
     local patronID=$1
+    local patronName=$2
 
     PrintCentered "Booking Venue"
 
     while true; do
-      read -p "Please enter the Room Number:" roomNumber
-      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,3}([a-zA-Z]{0,1}[0-9]{3}|[0-9]{3}[a-zA-Z]{0,1})$ ]]; then
-        echo "Invalid Input, please try again"
-      else
-        # Convert lower case to upper case
-        roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
-        break;
-      fi
+        read -p "Please enter the Room Number:" roomNumber
+        
+        # Check against the regex pattern first
+        if [[ ! $roomNumber =~ ^(?:[A-Z]{1,2}[1-3]?[0-9]{0,3}[A-Z]?|DK[1-8]|DK[A-Z]|DKAB[A-F]|DKS[A-Z]|DKSG[1-6])$ ]]; then
+            echo "Invalid room number format. Please enter a valid TAR UC room number."
+        else
+            # Convert lower case to upper case
+            roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
+            
+            # Check if the room number exists in venue.txt
+            if ! grep -q "$roomNumber" venue.txt; then
+                echo "The room number you entered does not exist. Please check and try again."
+            # Check if the booking is valid
+            elif ! ValidateBooking $patronID $roomNumber $bookingDate $timeDurationFrom $timeDurationTo; then
+                echo "The room number is already booked for the specified date and time. Please choose a different slot or room."
+            else
+                break
+            fi
+        fi
     done
 
     # Grab data from venue.txt
@@ -184,9 +268,6 @@ BookingVenue() {
         fi
     done
 
-
-
-
     ToMinutes() {
         local time="$1"
         local hours="${time%:*}"
@@ -221,18 +302,8 @@ BookingVenue() {
         fi
     done
 
-    
-    
-    # Only checks for whether it is empty or not
-    while true; do
-        read -p "Reasons for Booking: " reasons
-        if [[ -z $reasons ]]; then
-            echo "Please provide a valid Reasons for Booking: "
-            read -p "Reasons for Booking: " reasons
-        else
-            break
-        fi
-    done
+    # Don't check
+    read -p "Reasons for Booking: " reasons
 
     echo "Booking Venue: $patronID"
     BookingVenueCondition "$patronID"
@@ -242,12 +313,13 @@ BookingVenue() {
 # Validation for patron details condition
 PatronDetailsCondition() {
     local patronID=$1
+    local patronName=$2
 
     read -p "Press ${bold}(n)${normal} to proceed ${bold}Book Venue${normal} or ${bold}(q)${normal} to return to ${bold}University Venue Management Menu${normal}:" proceedBooking 
 
     case $proceedBooking in
         "n"|"n")
-            BookingVenue $patronID
+            BookingVenue $patronID $patronName
             ;;
         "q"|"Q")
             echo -e "Returning to Main Menu.\n"
@@ -255,7 +327,7 @@ PatronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            PatronDetailsCondition $patronID
+            PatronDetailsCondition $patronID $patronName
             ;;
     esac
 }
@@ -294,8 +366,8 @@ PatronDetailsValidation() {
 
     echo -e "\nPatron Name:${patronDetailsArray[1]}\n" 
 
-    PatronDetailsCondition $patronID
-}
+    PatronDetailsCondition $patronID ${patronDetailsArray[1]}
+}}
 
 # Task03.sh
 # Add Venue Funciton
@@ -504,11 +576,16 @@ RegisterPatron() {
 
     # Regular Expression check to check student / Staff ID valid or not
     while true; do
-        read -p "Patron ID (As per TAR UMT format): " patronID
+        read -p "Patron ID (00XXX00000 or 0000): " patronID
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
+            # Check if the ID is already in patrons.txt
+            if grep -q "^$patronID:" patrons.txt; then
+                echo "This ID has already been registered. Please log in or use a different ID."
+                continue
+            fi
             break
         else
-            echo "Please provide a valid Patron ID (As per TAR UMT format)."
+            echo "Please provide a valid Patron ID (00XXX00000 or 0000)."
         fi
     done
 
