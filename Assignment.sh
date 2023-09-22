@@ -83,7 +83,7 @@ GenerateReceipt() {
     currentDate=$(date +"%-m-%-d-%Y")
     currentTime=$(date +"%I.%M%p")
     fileName="${patronID}_${roomNumber}_${currentDate}.txt"
-
+    touch $fileName
     {
         # Print the receipt
         echo "+$(printf '%.s-' {1..80})+"
@@ -94,8 +94,6 @@ GenerateReceipt() {
         print_centered "$combined_info"
         print_centered "Room Number : $roomNumber"
         print_centered "Date Booking: $dateBooking"
-
-
 
         combined_info2="Time From: $timeFrom   Time To: $timeTo"
         print_centered "$combined_info2"
@@ -138,7 +136,7 @@ BookingVenueCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            BookingVenueCondition $patronID
+            BookingVenueCondition $patronID $patronName
             ;;
     esac
 }
@@ -223,7 +221,7 @@ BookingVenue() {
     # Read Room Number's data
     if [[ ! $roomDetails ]] ;then
         echo "Error: No room found with Room Number $roomNumber."
-        BookingVenue $patronID
+        BookingVenue $patronID $patronName
         return
     fi
 
@@ -247,7 +245,13 @@ BookingVenue() {
         local year="20${date##*/}"  # Assuming 2000s for yy format
 
         # Formula to convert Gregorian date to JDN
-        echo $(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
+        month=10#$month
+        day=10#$day
+        year=10#$year
+        
+        result=$(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
+        
+        echo $result
     }
 
     while true; do
@@ -255,7 +259,7 @@ BookingVenue() {
 
         if [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then
             # Convert both the current date and booking date to JDN for comparison
-            current_jdn=$(DateToJDN $(date +"%m/%d/%Y"))
+            current_jdn=$(DateToJDN $(date +"%m/%d/%y"))
             booking_jdn=$(DateToJDN "$bookingDate")
 
             if (( booking_jdn <= current_jdn )); then
@@ -305,9 +309,8 @@ BookingVenue() {
     # Don't check
     read -p "Reasons for Booking: " reasons
 
-    echo "Booking Venue: $patronID"
-    BookingVenueCondition "$patronID"
-    # echo "$patronID:$bookingDate:$timeDurationFrom:$timeDurationTo:$reasons" >> "./booking.txt"
+    echo "Booking Venue: $roomNumber"
+    BookingVenueCondition $patronID $patronName 
 }
 
 # Validation for patron details condition
@@ -327,6 +330,7 @@ PatronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
+            PatronDetailsCondition $patronID $patronName
             PatronDetailsCondition $patronID $patronName
             ;;
     esac
