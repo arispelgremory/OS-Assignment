@@ -1,0 +1,13 @@
++--------------------------------------------------------------------------------+
+|                             Venue Booking Receipt                              |
+|                                                                                |
+|                 Patron ID : 1234   Patron Name : Chin Chai Lim                 |
+|                              Room Number : DKSG4                               |
+|                             Date Booking: 09/25/23                             |
+|                       Time From: 14-00   Time To: 16-00                        |
+|                            Reason for Booking: test                            |
+|                                                                                |
+|                          This is a computer generated                          |
+|                      receipt with no signature required.                       |
+|                          Printed on 9-23-2023 03.31AM                          |
++--------------------------------------------------------------------------------+

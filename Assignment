@@ -149,22 +149,22 @@ ValidateBooking() {
     local timeDurationFrom=$4
     local timeDurationTo=$5
 
-    # Convert times to minutes for easier comparison
-    start_time_minutes=$(ToMinutes "$timeDurationFrom")
-    end_time_minutes=$(ToMinutes "$timeDurationTo")
+    # Convert input times to minutes
+    start_time_minutes=$((10#${timeDurationFrom:0:2} * 60 + 10#${timeDurationFrom:3:2}))
+    end_time_minutes=$((10#${timeDurationTo:0:2} * 60 + 10#${timeDurationTo:3:2}))
 
     # Check if the venue is already booked at the desired date and time
     while IFS= read -r line; do
         # Extract details from each booking line
-        local bookedPatronID=$(echo $line | cut -d':' -f1)
-        local bookedRoomNumber=$(echo $line | cut -d':' -f2)
-        local bookedDate=$(echo $line | cut -d':' -f3)
-        local bookedTimeFrom=$(echo $line | cut -d':' -f4)
-        local bookedTimeTo=$(echo $line | cut -d':' -f5)
+        local bookedPatronID=$(echo $line | cut -d' ' -f1)
+        local bookedDate=$(echo $line | cut -d' ' -f2)
+        local bookedTimeFrom=$(echo $line | cut -d' ' -f3 | tr '-' ':')
+        local bookedTimeTo=$(echo $line | cut -d' ' -f4 | tr '-' ':')
+        local bookedRoomNumber=$(echo $line | cut -d' ' -f5)
 
         # Convert booked times to minutes
-        booked_start_time_minutes=$(ToMinutes "$bookedTimeFrom")
-        booked_end_time_minutes=$(ToMinutes "$bookedTimeTo")
+        booked_start_time_minutes=$((10#${bookedTimeFrom:0:2} * 60 + 10#${bookedTimeFrom:3:2}))
+        booked_end_time_minutes=$((10#${bookedTimeTo:0:2} * 60 + 10#${bookedTimeTo:3:2}))
 
         # Check venue booking overlap
         if [[ "$roomNumber" == "$bookedRoomNumber" && "$bookingDate" == "$bookedDate" ]]; then
@@ -186,6 +186,9 @@ ValidateBooking() {
     return 0
 }
 
+
+
+
 # Booking Venue
 BookingVenue() {
     local patronID=$1
@@ -197,7 +200,7 @@ BookingVenue() {
         read -p "Please enter the Room Number:" roomNumber
         
         # Check against the regex pattern first
-        if [[ ! $roomNumber =~ ^(?:[A-Z]{1,2}[1-3]?[0-9]{0,3}[A-Z]?|DK[1-8]|DK[A-Z]|DKAB[A-F]|DKS[A-Z]|DKSG[1-6])$ ]]; then
+        if [[ !$roomNumber =~ ^(?:[A-Z]{1,2}[1-3]?[0-9]{0,3}[A-Z]?|DK[1-8]|DK[A-Z]|DKAB[A-F]|DKS[A-Z]|DKSG[1-6])$ ]]; then
             echo "Invalid room number format. Please enter a valid TAR UC room number."
         else
             # Convert lower case to upper case
@@ -206,9 +209,6 @@ BookingVenue() {
             # Check if the room number exists in venue.txt
             if ! grep -q "$roomNumber" venue.txt; then
                 echo "The room number you entered does not exist. Please check and try again."
-            # Check if the booking is valid
-            elif ! ValidateBooking $patronID $roomNumber $bookingDate $timeDurationFrom $timeDurationTo; then
-                echo "The room number is already booked for the specified date and time. Please choose a different slot or room."
             else
                 break
             fi
@@ -236,75 +236,71 @@ BookingVenue() {
 
     echo -e "\nPlease ${bold}enter ${normal}the following details:\n"
 
-    # Function to convert date mm/dd/yy to Julian Day Number (JDN)
-    DateToJDN() {
-        local date="$1"
-        local month="${date%%/*}"
-        date="${date#*/}"
-        local day="${date%%/*}"
-        local year="20${date##*/}"  # Assuming 2000s for yy format
 
-        # Formula to convert Gregorian date to JDN
-        month=10#$month
-        day=10#$day
-        year=10#$year
-        
-        result=$(( day + (153*(month + 12*((14 - month)/12) - 3) + 2)/5 + (365*(year + 4800 - (14 - month)/12)) + year/4 - year/100 + year/400 - 32045 ))
-        
-        echo $result
-    }
+    bookingDateDone=0
+    timeDurationFromDone=0
+    timeDurationToDone=0
 
     while true; do
-        read -p "Booking Date (mm/dd/yy): " bookingDate
+        if [[ $bookingDateDone == 0 ]]; then
+            read -p "Booking Date (mm/dd/yy): " bookingDate
+            bookingDateTimeStamp=$(date -d "$bookingDate" +%s)
+            currentDateTimeStamp=$(date +%s)
+            nextDayTimeStamp=$((currentDateTimeStamp + 86400))  # Adding 86400 seconds (1 day) to the current date timestamp
 
-        if [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then
-            # Convert both the current date and booking date to JDN for comparison
-            current_jdn=$(DateToJDN $(date +"%m/%d/%y"))
-            booking_jdn=$(DateToJDN "$bookingDate")
-
-            if (( booking_jdn <= current_jdn )); then
-                echo "Booking date must be at least one day in the future. Please enter a valid date."
-            else
-                break
+            if ! [[ $bookingDate =~ ^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{2})$ ]]; then 
+                echo "Invalid date format. Please enter in the format mm/dd/yy."
+                continue
             fi
-        else
-            echo "Invalid date format. Please enter in the format mm/dd/yy."
+            # Check if the booking date is at least two day in advance
+            if [[ "$bookingDateTimeStamp" -le "$nextDayTimeStamp" ]]; then
+                echo "Booking date must be at least two day in the future."
+                continue
+            fi
+            bookingDateDone=1
         fi
-    done
 
-    ToMinutes() {
-        local time="$1"
-        local hours="${time%:*}"
-        local minutes="${time#*:}"
-        echo $((hours * 60 + minutes))
-    }
+        if [[ $timeDurationFromDone == 0 ]]; then
+            read -p "Time From (hh-mm): " timeDurationFrom
+            if ! [[ $timeDurationFrom =~ ^([01]?[0-9]|2[0-3])-[0-5][0-9]$ ]]; then
+                echo "Invalid time format for time from. Please enter in the format hh-mm."
+                continue
+            fi
+            if (( 10#${timeDurationFrom:0:2}${timeDurationFrom:3:2} < 800 )); then
+                echo "Can't book a room before 8am! Please enter another time after 8am"
+                continue
+            fi
+            if (( 10#${timeDurationFrom:0:2}${timeDurationFrom:3:2} >= 2000 )); then
+                echo "Can't book a room after 8pm! Please enter another time before 8pm"
+                continue
+            fi
+            timeDurationFromDone=1
+        fi
 
-    while true; do
-        read -p "Time From (hh:mm): " timeDurationFrom
+        if [[ $timeDurationToDone == 0 ]]; then
+            read -p "Time to (hh-mm): " timeDurationTo
+            if ! [[ $timeDurationTo =~ ^([01]?[0-9]|2[0-3])-[0-5][0-9]$ ]]; then
+                echo "Invalid time format for time to. Please enter in the format hh-mm."
+                continue
+            fi
+            
+            if (( 10#${timeDurationTo:0:2}${timeDurationTo:3:2} - 10#${timeDurationFrom:0:2}${timeDurationFrom:3:2} < 30 )); then
+                echo "The booking should be at least 30 minutes."
+                continue
+            fi
+            timeDurationToDone=1
+        fi
 
-        if [[ ! $timeDurationFrom =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
-            echo "Invalid time format. Please enter in the format hh:mm."
-        else
+        # Check if the booking is valid
+        if ValidateBooking $patronID $roomNumber $bookingDate $timeDurationFrom $timeDurationTo; then
             break
+        else 
+            bookingDateDone=0
+            timeDurationFromDone=0
+            timeDurationToDone=0
         fi
     done
 
-    while true; do
-        read -p "Time to (hh:mm): " timeDurationTo
-        if [[ ! $timeDurationTo =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; then
-            echo "Invalid time format. Please enter in the format hh:mm."
-        else
-            # Convert times to minutes for comparison
-            start_time_minutes=$(ToMinutes "$timeDurationFrom")
-            end_time_minutes=$(ToMinutes "$timeDurationTo")
-
-            if (( end_time_minutes <= start_time_minutes )); then
-                echo "End time cannot be earlier than or equal to the start time. Please enter again."
-            else
-                break
-            fi
-        fi
-    done
 
     # Don't check
     read -p "Reasons for Booking: " reasons
@@ -330,7 +326,6 @@ PatronDetailsCondition() {
             ;;
         *)
             echo "Please provide a valid choice!" 
-            PatronDetailsCondition $patronID $patronName
             PatronDetailsCondition $patronID $patronName
             ;;
     esac
@@ -371,7 +366,7 @@ PatronDetailsValidation() {
     echo -e "\nPatron Name:${patronDetailsArray[1]}\n" 
 
     PatronDetailsCondition $patronID ${patronDetailsArray[1]}
-}}
+}
 
 # Task03.sh
 # Add Venue Funciton
@@ -379,34 +374,36 @@ AddVenue() {
     PrintCentered "Add New Venue"
    
     while true; do
-      read -p "${normal}Block Name:" blockName
-      if [[ ! $blockName =~ ^[a-zA-Z]{1,3}$ ]]; then
-        echo "Invalid Input, please try again"
-      else
-        # Convert lower case to upper case
-        blockName=$(echo -e $blockName | tr '[a-z]' '[A-Z]')
-        break;
-      fi
+        read -p "${normal}Block Name:" blockName
+        # Validate block name based on TAR UC blocks
+        if [[ ! $blockName =~ ^[A-Z]{1,2}$ ]]; then
+            echo "Invalid block name. Please enter a valid TAR UC block name."
+        else
+            # Convert lower case to upper case
+            blockName=$(echo -e $blockName | tr '[a-z]' '[A-Z]')
+            break
+        fi
     done
 
     while true; do
-      read -p "${normal}Room Number:" roomNumber
-      if [[ ! $roomNumber =~ ^[a-zA-Z]{1,3}([a-zA-Z]{0,1}[0-9]{3}|[0-9]{3}[a-zA-Z]{0,1})$ ]]; then
-        echo "Invalid Input, please try again"
-      else
-        # Convert lower case to upper case
-        roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
-        break;
-      fi
+        read -p "${normal}Room Number:" roomNumber
+        # Validate room number based on block and known room number formats for that block
+        if [[ !$roomNumber =~ ^(?:[A-Z]{1,2}[1-3]?[0-9]{0,3}[A-Z]?|DK[1-8]|DK[A-Z]|DKAB[A-F]|DKS[A-Z]|DKSG[1-6])$ ]]; then
+            echo "Invalid room number format. Please enter a valid TAR UC room number."
+        else
+            # Convert lower case to upper case
+            roomNumber=$(echo -e $roomNumber | tr '[a-z]' '[A-Z]')
+            break
+        fi
     done
 
     while true; do
-      read -p "${normal}Room Type:" roomType
-      if [[ ! ($roomType == "Lecture Hall" || $roomType == "Tutorial Room" || $roomType == "Lab") ]]; then
-        echo "Invalid Input, only accepts input such as:Lecture Hall, Tutorial Room and Lab."
-      else
-        break;
-      fi
+        read -p "${normal}Room Type:" roomType
+        if [[ ! ($roomType == "Lecture Hall" || $roomType == "Tutorial Room" || $roomType == "Lab") ]]; then
+            echo "Invalid Input, only accepts input such as:Lecture Hall, Tutorial Room and Lab."
+        else
+            break
+        fi
     done
 
     while true; do
@@ -418,28 +415,23 @@ AddVenue() {
         fi
     done
 
-
     read -p "Remarks:" remarks
     # Allow empty
 
-    echo -e "Status (by default): Available\n"
+    echo -e "Status (by default): Available\\n"
     status="Available" # Default is Available
 
-    echo -e "\n"
+    echo -e "\\n"
 
-    # Specify the file to read
-    file="venue.txt"
-
-    # Check if the file doesn't exists
-    if [[ ! -f $file ]]; then
-      echo "$file not found."
-      echo "Creating $file."
-      echo BlockName:RoomNumber:RoomType:Capacity:Remarks:Status >> $file
+    # Check for duplication
+    if grep -q "^$blockName:$roomNumber:" venue.txt; then
+        echo "The venue with Block $blockName and Room Number $roomNumber already exists."
+        return
     fi
 
     # Append data into venue.txt
-    echo "$blockName:$roomNumber:$roomType:$capacity:$remarks:$status" >> $file
-    
+    echo "$blockName:$roomNumber:$roomType:$capacity:$remarks:$status" >> venue.txt
+    echo "Venue successfully added!"
 
     is_valid=0
     while [ $is_valid -eq 0 ]; do
@@ -452,12 +444,11 @@ AddVenue() {
 
         elif [ "$action" = "q" ] || [ "$action" = "Q" ]; then
             BackToMenu
-            break;
+            break
         else
             echo "Please provide a valid choice"
         fi
     done
-
 }
 
 SearchVenue() {
@@ -582,8 +573,8 @@ RegisterPatron() {
     while true; do
         read -p "Patron ID (00XXX00000 or 0000): " patronID
         if [[ $patronID =~ ^[0-9]{6}$ ]] || [[ $patronID =~ ^[0-9]{4}$ ]]; then
-            # Check if the ID is already in patrons.txt
-            if grep -q "^$patronID:" patrons.txt; then
+            # Check if the ID is already in patron.txt
+            if grep -q "^$patronID:" patron.txt; then
                 echo "This ID has already been registered. Please log in or use a different ID."
                 continue
             fi
@@ -729,3 +720,5 @@ MainMenu() {
             ;;
     esac
 }
+
+MainMenu
